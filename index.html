@@ -60,15 +60,11 @@ h1{
 .trecho{
     display:inline-block;
     white-space:nowrap;
-
     padding:2px 4px;
     margin:2px 1px;
-
     border-radius:5px;
     cursor:grab;
-
     border:1px solid transparent;
-
     user-select:none;
 }
 
@@ -104,10 +100,8 @@ h1{
 .blood{
     width:18px;
     height:18px;
-
     background:white;
     border:1px solid #aaa;
-
     border-radius: 60% 60% 40% 40%;
     transform: rotate(45deg);
 }
@@ -121,7 +115,6 @@ h1{
     text-align:center;
     font-size:13px;
     font-weight:bold;
-
     background: rgba(255,255,255,0.92);
     padding:6px;
     border-radius:8px;
@@ -159,14 +152,11 @@ h1{
 .slot{
     width:42%;
     min-height:38px;
-
     border:2px solid #ccc;
     border-radius:8px;
-
     display:flex;
     align-items:center;
     justify-content:center;
-
     background:white;
 }
 
@@ -202,7 +192,6 @@ h1{
     text-align:center;
     font-size:15px;
     font-weight:bold;
-
     background: rgba(255,255,255,0.92);
     padding:8px;
     border-radius:10px;
@@ -314,8 +303,8 @@ const texto=document.getElementById("texto");
 const progresso=document.getElementById("progresso");
 const sangue=document.getElementById("sangue");
 
-/* ✔ AGORA É MAP (CORRETO) */
-let acertosFixos = new Map();
+/* Rastreia qual linha (ID) gerou qual par de resposta unificado */
+let acertosPorLinha = new Map();
 
 /* TEXTO */
 partes.forEach(p=>{
@@ -375,7 +364,6 @@ caixa.querySelector(".remove").onclick=()=>{
     caixa.remove();
     slot.classList.remove("filled");
     checarPar(slot.parentElement);
-    atualizarProgresso();
 };
 
 slot.appendChild(caixa);
@@ -385,15 +373,14 @@ checarPar(slot.parentElement);
 });
 });
 
-/* ✔ CHECAGEM CORRIGIDA */
+/* CHECAGEM REFEITA PARA EVITAR DUPLICATAS */
 function checarPar(par){
-
 let slots = par.querySelectorAll(".slot");
 let id = par.dataset.id;
 
-/* se incompleto → remove acerto */
+// Se a linha ficou incompleta, limpa o registro dela e atualiza
 if(!(slots[0].children.length && slots[1].children.length)){
-    acertosFixos.delete(id);
+    acertosPorLinha.delete(id);
     atualizarProgresso();
     return;
 }
@@ -401,18 +388,34 @@ if(!(slots[0].children.length && slots[1].children.length)){
 let a = slots[0].children[0].dataset.valor;
 let b = slots[1].children[0].dataset.valor;
 
-let correto = false;
+let parEncontrado = null;
 
+// Verifica se os termos digitados batem com alguma resposta oficial
 respostas.forEach(r=>{
-if((a===r[0] && b===r[1]) || (a===r[1] && b===r[0])){
-    correto = true;
-}
+    if((a===r[0] && b===r[1]) || (a===r[1] && b===r[0])){
+        // Padroniza a string do par para checagem única (ordem alfabética dos termos)
+        parEncontrado = [r[0], r[1]].sort().join("|");
+    }
 });
 
-if(correto){
-    acertosFixos.set(id,true);
-}else{
-    acertosFixos.delete(id);
+if(parEncontrado){
+    // Verifica se esse par JÁ está sendo usado em OUTRA linha
+    let jaExiste = false;
+    for (let [linhaId, parTexto] of acertosPorLinha.entries()) {
+        if (linhaId !== id && parTexto === parEncontrado) {
+            jaExiste = true;
+            break;
+        }
+    }
+
+    if(!jaExiste){
+        acertosPorLinha.set(id, parEncontrado);
+    } else {
+        // Se já existir em outra linha, esta linha atual não pontua
+        acertosPorLinha.delete(id);
+    }
+} else {
+    acertosPorLinha.delete(id);
 }
 
 atualizarProgresso();
@@ -420,28 +423,29 @@ atualizarProgresso();
 
 /* PROGRESSO */
 function atualizarProgresso(){
-
 progresso.innerHTML="";
 
+// O total de pontos válidos é a quantidade de pares únicos salvos no Map
+let totalAcertos = acertosPorLinha.size;
+
 for(let i=0;i<16;i++){
-let div=document.createElement("div");
-div.className="blood";
-if(i < acertosFixos.size) div.classList.add("ok");
-progresso.appendChild(div);
+    let div=document.createElement("div");
+    div.className="blood";
+    if(i < totalAcertos) div.classList.add("ok");
+    progresso.appendChild(div);
 }
 
-sangue.innerText = `${acertosFixos.size} litros de sangue preenchidos`;
+sangue.innerText = `${totalAcertos} litros de sangue preenchidos`;
 
-if(acertosFixos.size === 16){
+if(totalAcertos === 16){
+    document.getElementById("resultado").innerHTML=`
+    <div class="vitoria">
+    🎉 O Vampiro Anafórico acordou novamente!
+    </div>
+    `;
 
-document.getElementById("resultado").innerHTML=`
-<div class="vitoria">
-🎉 O Vampiro Anafórico acordou novamente!
-</div>
-`;
-
-document.getElementById("vampiro").src =
-"https://images.virgula.me/2012/12/31/392822.jpg";
+    document.getElementById("vampiro").src =
+    "https://images.virgula.me/2012/12/31/392822.jpg";
 }
 }
 
