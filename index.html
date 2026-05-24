@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>O Vampiro Anafórico</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    margin:0;
+    padding:15px;
+    height:100vh;
+    overflow:hidden;
+
+    background-image: url("https://i1-c.pinimg.com/736x/4b/2c/9b/4b2c9bb4d72aa2fb8cb827e4e0673fe1.jpg");
+    background-repeat: repeat;
+    background-size: 250px 250px;
+}
+
+h1{
+    text-align:center;
+    background: rgba(255,255,255,0.92);
+    width:fit-content;
+    margin:8px auto;
+    padding:8px 16px;
+    border-radius:10px;
+    font-size:20px;
+}
+
+.container{
+    display:grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap:12px;
+    height:calc(100vh - 70px);
+}
+
+.left{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    height:100%;
+}
+
+#texto{
+    background: rgba(255,255,255,0.92);
+    padding:14px;
+    border-radius:12px;
+    border:1px solid #ddd;
+
+    font-size:18px;
+    line-height:2.1;
+
+    user-select:none;
+
+    flex:1;
+    overflow:auto;
+}
+
+.trecho{
+    display:inline-block;
+    white-space:nowrap;
+
+    padding:2px 4px;
+    margin:2px 1px;
+
+    border-radius:5px;
+    cursor:grab;
+
+    border:1px solid transparent;
+
+    user-select:none;
+}
+
+.trecho:hover{
+    background:#dbeeff;
+    border:1px solid #7bb5ff;
+}
+
+.vampiro-area{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:18px;
+}
+
+#vampiro{
+    max-width:200px;
+}
+
+#progresso{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap:6px;
+
+    background: rgba(255,255,255,0.92);
+    padding:8px;
+    border-radius:10px;
+    border:1px solid #ddd;
+
+    width:160px;
+}
+
+.blood{
+    width:18px;
+    height:18px;
+
+    background:white;
+    border:1px solid #aaa;
+
+    border-radius: 60% 60% 40% 40%;
+    transform: rotate(45deg);
+}
+
+.blood.ok{
+    background: crimson;
+    border-color: darkred;
+}
+
+#sangue{
+    text-align:center;
+    font-size:13px;
+    font-weight:bold;
+
+    background: rgba(255,255,255,0.92);
+    padding:6px;
+    border-radius:8px;
+    border:1px solid #ddd;
+}
+
+.right{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.area{
+    flex:1;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:6px;
+
+    background: rgba(255,255,255,0.92);
+    padding:10px;
+    border-radius:12px;
+    border:1px solid #ddd;
+}
+
+.par{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:6px;
+    border-radius:8px;
+    background: rgba(255,255,255,0.95);
+    border:1px solid #ddd;
+}
+
+.slot{
+    width:42%;
+    min-height:38px;
+
+    border:2px solid #ccc;
+    border-radius:8px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    background:white;
+}
+
+.slot.filled{
+    background: #E6F4CD;
+    border-color: #30430f;
+}
+
+.preenchido{
+    position:relative;
+    width:100%;
+    text-align:center;
+    font-size:12px;
+}
+
+.remove{
+    position:absolute;
+    top:-6px;
+    right:-6px;
+    background:red;
+    color:white;
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    font-size:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+}
+
+#resultado{
+    text-align:center;
+    font-size:15px;
+    font-weight:bold;
+
+    background: rgba(255,255,255,0.92);
+    padding:8px;
+    border-radius:10px;
+    border:1px solid #ddd;
+}
+
+.vitoria{
+    color:green;
+    font-size:16px;
+}
+
+.secret{
+    display:inline-block;
+    min-width:2ch;
+    background: transparent;
+    border-radius:6px;
+    transition:0.15s;
+    cursor:grab;
+}
+
+.secret:hover{
+    background:#fff3a6;
+    outline:1px dashed #c9a800;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>O Vampiro Anafórico</h1>
+
+<div class="container">
+
+<div class="left">
+
+<div id="texto"></div>
+
+<div class="vampiro-area">
+
+    <img id="vampiro" src="https://i.ibb.co/MxNwk7DK/Gemini-Generated-Image-tkttv3tkttv3tktt.png">
+
+    <div>
+        <div id="progresso"></div>
+        <div id="sangue">0 litros de sangue preenchidos</div>
+    </div>
+
+</div>
+
+</div>
+
+<div class="right">
+
+<div class="area" id="pares"></div>
+
+<div id="resultado"></div>
+
+</div>
+
+</div>
+
+<script>
+
+/* =========================
+   DADOS
+========================= */
+
+const partes = [
+{t:"Maria"},{t:"sempre foi apaixonada por"},{t:"histórias de vampiros."},
+{t:"Elas"},{t:"povoavam seus sonhos"},{t:"desde que"},
+{t:"ela"},{t:"assistiu"},{t:"“Entrevista com um Vampiro”,"},
+{t:"de 1994,"},{t:"e também"},{t:"ø", secret:true},
+{t:"ao primeiro filme da saga"},{t:"“Crepúsculo”."},{t:"Este"},
+{t:"se tornou seu"},{t:"filme favorito,"},{t:"mesmo que"},
+{t:"muitos"},{t:"o"},{t:"criticassem, enquanto"},
+{t:"aquele"},{t:"era quase"},{t:"uma unanimidade"},
+{t:"entre os fãs"},{t:"do gênero."},
+
+{t:"Na escola,"},{t:"a jovem"},{t:"conheceu"},
+{t:"Pedro,"},{t:"que"},{t:"compartilhava do"},
+{t:"mesmo interesse"},{t:"por esses"},{t:"seres fantásticos."},
+{t:"Eles"},{t:"eram"},{t:"tema frequente das conversas"},
+{t:"entre"},{t:"os dois."},{t:"Pedro"},
+{t:"emprestou"},{t:"-lhe"},{t:"diversos"},
+{t:"livros do gênero,"},{t:"os quais"},{t:"logo encheram"},
+{t:"as prateleiras do quarto"},{t:"dela."},
+
+{t:"Juntos,"},{t:"os amigos"},{t:"decidiram criar"},
+{t:"um clube de literatura sobrenatural"},{t:"na escola."},{t:"A"},
+{t:"iniciativa"},{t:"atraiu"},{t:"vários outros estudantes."},
+{t:"Pedro"},{t:"apresentou"},{t:"-os"},
+{t:"a diferentes"},{t:"autores,"},{t:"enquanto"},
+{t:"Maria"},{t:"organizava"},{t:"as reuniões semanais,"},
+{t:"nas quais"},{t:"todos"},{t:"discutiam"},
+{t:"suas"},{t:"obras favoritas de vampiros"},{t:"e trocavam"},
+{t:"recomendações de leitura."}
+];
+
+const respostas = [
+["Elas","histórias de vampiros."],["ela","Maria"],["ø","assistiu"],
+["Este","“Crepúsculo”."],["o","“Crepúsculo”."],["aquele","“Entrevista com um Vampiro”,"],
+["a jovem","Maria"],["que","Pedro,"],["Eles","seres fantásticos."],
+["-lhe","Maria"],["os quais","livros do gênero,"],["dela.","Maria"],
+["iniciativa","um clube de literatura sobrenatural"],["-os","vários outros estudantes."],
+["nas quais","as reuniões semanais,"],["suas","todos"]
+];
+
+const texto=document.getElementById("texto");
+const progresso=document.getElementById("progresso");
+const sangue=document.getElementById("sangue");
+
+/* ✔ AGORA É MAP (CORRETO) */
+let acertosFixos = new Map();
+
+/* TEXTO */
+partes.forEach(p=>{
+let span=document.createElement("span");
+span.className="trecho";
+span.draggable=true;
+
+if(p.secret){
+    span.innerHTML = "&nbsp;&nbsp;&nbsp;&nbsp;";
+    span.classList.add("secret");
+}else{
+    span.innerText = p.t;
+}
+
+span.dataset.valor=p.t;
+
+span.addEventListener("dragstart",e=>{
+e.dataTransfer.setData("text/plain",p.t);
+});
+
+texto.appendChild(span);
+});
+
+/* PARES */
+const pares=document.getElementById("pares");
+
+for(let i=0;i<16;i++){
+let linha=document.createElement("div");
+linha.className="par";
+linha.dataset.id = i;
+
+linha.innerHTML=`
+<div class="slot"></div>
+<div class="seta">→</div>
+<div class="slot"></div>
+`;
+pares.appendChild(linha);
+}
+
+/* DROP */
+document.querySelectorAll(".slot").forEach(slot=>{
+slot.addEventListener("dragover",e=>e.preventDefault());
+
+slot.addEventListener("drop",e=>{
+e.preventDefault();
+
+if(slot.children.length>0) return;
+
+let valor=e.dataTransfer.getData("text/plain");
+
+let caixa=document.createElement("div");
+caixa.className="preenchido";
+caixa.innerHTML=`${valor}<div class="remove">✕</div>`;
+caixa.dataset.valor=valor;
+
+caixa.querySelector(".remove").onclick=()=>{
+    caixa.remove();
+    slot.classList.remove("filled");
+    checarPar(slot.parentElement);
+    atualizarProgresso();
+};
+
+slot.appendChild(caixa);
+slot.classList.add("filled");
+
+checarPar(slot.parentElement);
+});
+});
+
+/* ✔ CHECAGEM CORRIGIDA */
+function checarPar(par){
+
+let slots = par.querySelectorAll(".slot");
+let id = par.dataset.id;
+
+/* se incompleto → remove acerto */
+if(!(slots[0].children.length && slots[1].children.length)){
+    acertosFixos.delete(id);
+    atualizarProgresso();
+    return;
+}
+
+let a = slots[0].children[0].dataset.valor;
+let b = slots[1].children[0].dataset.valor;
+
+let correto = false;
+
+respostas.forEach(r=>{
+if((a===r[0] && b===r[1]) || (a===r[1] && b===r[0])){
+    correto = true;
+}
+});
+
+if(correto){
+    acertosFixos.set(id,true);
+}else{
+    acertosFixos.delete(id);
+}
+
+atualizarProgresso();
+}
+
+/* PROGRESSO */
+function atualizarProgresso(){
+
+progresso.innerHTML="";
+
+for(let i=0;i<16;i++){
+let div=document.createElement("div");
+div.className="blood";
+if(i < acertosFixos.size) div.classList.add("ok");
+progresso.appendChild(div);
+}
+
+sangue.innerText = `${acertosFixos.size} litros de sangue preenchidos`;
+
+if(acertosFixos.size === 16){
+
+document.getElementById("resultado").innerHTML=`
+<div class="vitoria">
+🎉 O Vampiro Anafórico acordou novamente!
+</div>
+`;
+
+document.getElementById("vampiro").src =
+"https://images.virgula.me/2012/12/31/392822.jpg";
+}
+}
+
+atualizarProgresso();
+
+</script>
+
+</body>
+</html>
